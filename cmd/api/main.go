@@ -13,6 +13,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"greenlight.francisko/internal/data"
 )
 
 const version = "1.0.0"
@@ -31,6 +32,7 @@ type config struct {
 type application struct {
 	config config
 	logger *slog.Logger
+	models data.Models
 }
 
 func main() {
@@ -65,9 +67,12 @@ func main() {
 
 	logger.Info("database connection pool establish")
 
+	models := data.NewModel(db)
+
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: models,
 	}
 
 	handler := app.routes()
