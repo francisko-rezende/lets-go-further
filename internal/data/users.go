@@ -34,7 +34,7 @@ type password struct {
 func (u UserModel) Insert(user *User) error {
 	query := `
 			INSERT INTO users (name, email, password_hash, activated)
-			VALUE ($1, $2, $3, $4)
+			VALUES ($1, $2, $3, $4)
 			RETURNING id, created_at, version`
 
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated}
