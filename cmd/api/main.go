@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"greenlight.francisko/internal/data"
+	"greenlight.francisko/internal/mailer"
 )
 
 const version = "1.0.0"
@@ -30,12 +32,20 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *slog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -46,6 +56,9 @@ func main() {
 	}
 
 	dsn := os.Getenv("GREENLIGHT_DB_DSN")
+	smtp_username := os.Getenv("MAILTRAP_USERNAME")
+	smtp_password := os.Getenv("MAILTRAP_PASSWORD")
+	fmt.Println(smtp_password, smtp_username)
 
 	var cfg config
 
@@ -58,6 +71,12 @@ func main() {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", smtp_username, "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", smtp_password, "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.francisko.net>", "SMTP SENDER")
 
 	flag.Parse()
 
@@ -79,6 +98,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: models,
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
 	err = app.serve()
