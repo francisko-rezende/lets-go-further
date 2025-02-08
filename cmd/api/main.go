@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -60,7 +59,6 @@ func main() {
 	dsn := os.Getenv("GREENLIGHT_DB_DSN")
 	smtp_username := os.Getenv("MAILTRAP_USERNAME")
 	smtp_password := os.Getenv("MAILTRAP_PASSWORD")
-	fmt.Println(smtp_password, smtp_username)
 
 	var cfg config
 
